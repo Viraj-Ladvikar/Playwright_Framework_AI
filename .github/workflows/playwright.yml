@@ -1,4 +1,4 @@
-#To run manually: go to your repo → Actions → Playwright Tests → Run workflow → choose your parameters → Run.
+# To run manually: go to your repo → Actions → Playwright Tests → Run workflow → choose your parameters → Run.
 
 name: 🎭 Playwright Tests
 
@@ -21,6 +21,7 @@ on:
           - test:web
           - test:datadriven
         default: "test:e2e"
+
       browser:
         description: "Select browser"
         type: choice
@@ -29,6 +30,7 @@ on:
           - firefox
           - webkit
         default: "chromium"
+
       mode:
         description: "Run mode"
         type: choice
@@ -57,22 +59,40 @@ jobs:
       - name: 🎭 Install Playwright Browsers
         run: npx playwright install --with-deps
 
-      - name: ⚙️ Create .env File
-        run: Copy-Item .env.example .env
+      - name: Setup environment
+        shell: pwsh
+        run: |
+          if (-not (Test-Path ".env.example")) {
+            Write-Error ".env.example file not found"
+            exit 1
+          }
+
+          Copy-Item ".env.example" ".env" -Force
+
+          Write-Host ".env file created successfully"
 
       - name: 🧪 Run Playwright Tests
         run: |
           $suite = "${{ github.event.inputs.test_suite || 'test:e2e' }}"
           $browser = "${{ github.event.inputs.browser || 'chromium' }}"
           $mode = "${{ github.event.inputs.mode || 'headless' }}"
-          # Map suite names to test tags. The e2e suite uses the @end-to-end tag.
+
+          # Map suite names to test tags.
           $tag = switch ($suite) {
-            'test:e2e' { '@end-to-end' }
+            'test:e2e' { '@e2e' }
             default { '@' + ($suite -replace 'test:', '') }
           }
+
           $browserFlag = "--project=$browser"
           $modeFlag = if ($mode -eq 'headed') { '--headed' } else { '' }
+
+          Write-Host "Running suite: $suite"
+          Write-Host "Using tag: $tag"
+          Write-Host "Browser: $browser"
+          Write-Host "Mode: $mode"
+
           npx playwright test --grep "$tag" $browserFlag $modeFlag --reporter=dot --output=test-results
+
         env:
           CI: "1"
 
