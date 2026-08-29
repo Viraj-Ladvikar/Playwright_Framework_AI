@@ -24,7 +24,8 @@ export class SearchResultsPage {
    */
   async isSearchResultsPageExists(): Promise<boolean> {
     try {
-      return await this.heading.isVisible();
+      await this.heading.waitFor({ state: 'visible', timeout: 10000 });
+      return true;
     } catch (error) {
       console.log(`Error checking search results page: ${error}`);
       return false;
@@ -46,7 +47,12 @@ export class SearchResultsPage {
    */
   async isProductDisplayed(productName: string): Promise<boolean> {
     try {
-      return await this.page.locator('#content .product-thumb h4 a').filter({ hasText: productName }).first().isVisible();
+      await this.page
+        .locator('#content .product-thumb h4 a')
+        .filter({ hasText: productName })
+        .first()
+        .waitFor({ state: 'visible', timeout: 10000 });
+      return true;
     } catch (error) {
       console.log(`Error checking product in results: ${error}`);
       return false;
