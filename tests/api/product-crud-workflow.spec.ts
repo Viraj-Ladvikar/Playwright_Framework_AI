@@ -16,7 +16,7 @@ test.describe('Product CRUD Workflow Tests', () => {
 
     const BASE_URL = process.env.API_BASE_URL || Routes.BASE_URL;
 
-    test('E2E - Product Create, Update and Delete Workflow @master @end-to-end @api', async ({ request }) => {
+    test('E2E - Product Create, Update and Delete Workflow @master @e2e @end-to-end @api', async ({ request }) => {
 
         const createPayload = RandomDataUtil.generateProductPayload();
         const updatedPayload = RandomDataUtil.generateUpdatedProductPayload();

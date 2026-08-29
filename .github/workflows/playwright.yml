@@ -79,7 +79,7 @@ jobs:
 
           # Map suite names to test tags.
           $tag = switch ($suite) {
-            'test:e2e' { '@e2e' }
+            'test:e2e' { '@(e2e|end-to-end)' }
             default { '@' + ($suite -replace 'test:', '') }
           }
 
@@ -91,7 +91,7 @@ jobs:
           Write-Host "Browser: $browser"
           Write-Host "Mode: $mode"
 
-          npx playwright test --grep "$tag" $browserFlag $modeFlag --reporter=dot --output=test-results
+          npx playwright test --grep "$tag" $browserFlag $modeFlag --output=test-results
 
         env:
           CI: "1"

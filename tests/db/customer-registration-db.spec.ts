@@ -1,7 +1,7 @@
 /**
  * Test Case: OpenCart Customer Registration - UI + Admin + MySQL End-to-End
  *
- * Tags: @master @sanity @regression @end-to-end @db
+ * Tags: @master @sanity @regression @e2e @end-to-end @db
  *
  * Steps:
  * 1) Open the OpenCart storefront and navigate to My Account -> Register
@@ -45,7 +45,7 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin';
 test.skip(process.env.CI === '1', 'Local OpenCart/MySQL stack is not available on CI');
 
 test(
-    'OpenCart Customer Registration - UI + Admin + MySQL validation @master @sanity @regression @end-to-end @db',
+    'OpenCart Customer Registration - UI + Admin + MySQL validation @master @sanity @regression @e2e @end-to-end @db',
     async ({ browser, page, homePage, registerPage, accountSuccessPage }) => {
         // Dynamically generated unique customer data
         const customer = {

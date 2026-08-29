@@ -17,7 +17,7 @@ test.describe('Cart CRUD Workflow Tests', () => {
     const BASE_URL = process.env.API_BASE_URL || Routes.BASE_URL;
     const USER_ID = Number(process.env.USER_ID ?? 1);
 
-    test('E2E - Cart Create, Update and Delete Workflow @master @end-to-end @api', async ({ request }) => {
+    test('E2E - Cart Create, Update and Delete Workflow @master @e2e @end-to-end @api', async ({ request }) => {
 
         const createPayload = RandomDataUtil.generateCartPayload(USER_ID);
         const updatedPayload = RandomDataUtil.generateUpdatedCartPayload(USER_ID);
