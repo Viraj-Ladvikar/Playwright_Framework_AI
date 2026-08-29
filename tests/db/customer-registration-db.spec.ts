@@ -15,6 +15,7 @@
  * 9) Confirm the same generated customer was validated in all three layers
  */
 
+
 // using custom fixtures
 import { test, expect } from '../../fixtures/pageFixtures';
 import { RandomDataUtil } from '../../utils/dataGenerator';
