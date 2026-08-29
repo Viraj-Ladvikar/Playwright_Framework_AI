@@ -40,6 +40,10 @@ const STOREFRONT_URL = process.env.STOREFRONT_URL || 'http://localhost/opencart/
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin';
 
+// This test depends on the local OpenCart + MySQL stack (admin portal and DB
+// checks point at localhost/XAMPP), which is not provisioned on CI runners.
+test.skip(process.env.CI === '1', 'Local OpenCart/MySQL stack is not available on CI');
+
 test(
     'OpenCart Customer Registration - UI + Admin + MySQL validation @master @sanity @regression @end-to-end @db',
     async ({ browser, page, homePage, registerPage, accountSuccessPage }) => {

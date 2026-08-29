@@ -41,7 +41,7 @@ export default defineConfig({
 
     video: "retain-on-failure",
 
-    headless: false,
+    headless: process.env.CI ? true : false,
 
     viewport: {
       width: 1280,
@@ -53,7 +53,9 @@ export default defineConfig({
     permissions: ["geolocation"], // Set necessary permissions for geolocation-based tests
   },
 
-  grep: /@master/,
+  // grep is intentionally NOT set here: each npm script / CI job passes its own
+  // --grep flag (e.g. @e2e, @api), and a hardcoded config-level grep would AND
+  // with the CLI grep and can silently match zero tests.
 
   projects: [
     {

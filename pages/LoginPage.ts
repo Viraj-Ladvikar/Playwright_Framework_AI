@@ -29,5 +29,8 @@ export class LoginPage {
     await this.txtEmail.fill(email);
     await this.txtPassword.fill(password);
     await this.btnLogin.click();
+    // The login form submits and redirects to the account page; wait for that
+    // navigation so a subsequent page check is not racing the redirect.
+    await this.page.waitForLoadState('networkidle');
   }
 }
