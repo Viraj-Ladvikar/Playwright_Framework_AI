@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { Routes } from '../../api/endpoints/routes';
 import { RandomDataUtil } from '../../utils/dataGenerator';
+import { postWithRetry } from '../../utils/apiRetry';
 import dotenv from 'dotenv';
 
 // override: true ensures the project .env values win over pre-existing
@@ -22,9 +23,11 @@ test.describe('Cart CRUD Workflow Tests', () => {
         const updatedPayload = RandomDataUtil.generateUpdatedCartPayload(USER_ID);
 
         // Create a cart and capture the generated ID
-        const createResponse = await request.post(`${BASE_URL}${Routes.CREATE_CART}`, {
-            data: createPayload,
-        });
+        const createResponse = await postWithRetry(() =>
+            request.post(`${BASE_URL}${Routes.CREATE_CART}`, {
+                data: createPayload,
+            })
+        );
 
         expect(createResponse.status(), 'Create should return status 201').toBe(201);
 

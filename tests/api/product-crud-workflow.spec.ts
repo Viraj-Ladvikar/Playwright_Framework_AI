@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { Routes } from '../../api/endpoints/routes';
 import { RandomDataUtil } from '../../utils/dataGenerator';
+import { postWithRetry } from '../../utils/apiRetry';
 import dotenv from 'dotenv';
 
 // override: true ensures the project .env values win over pre-existing
@@ -21,9 +22,11 @@ test.describe('Product CRUD Workflow Tests', () => {
         const updatedPayload = RandomDataUtil.generateUpdatedProductPayload();
 
         // Create a product and capture the generated ID
-        const createResponse = await request.post(`${BASE_URL}${Routes.CREATE_PRODUCT}`, {
-            data: createPayload,
-        });
+        const createResponse = await postWithRetry(() =>
+            request.post(`${BASE_URL}${Routes.CREATE_PRODUCT}`, {
+                data: createPayload,
+            })
+        );
 
         expect(createResponse.status(), 'Create should return status 201').toBe(201);
 
