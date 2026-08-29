@@ -20,6 +20,8 @@
 import { test, expect } from '../../fixtures/pageFixtures';
 import { RandomDataUtil } from '../../utils/dataGenerator';
 import { executeQuery } from '../../utils/dbClient';
+import { AdminLoginPage } from '../../pages/AdminLoginPage';
+import { AdminCustomersPage } from '../../pages/AdminCustomersPage';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -31,12 +33,16 @@ dotenv.config();
 const ADMIN_PORTAL_URL =
     process.env.ADMIN_PORTAL_URL || 'http://localhost/opencart/upload/admin/index.php';
 
+// The DB and admin layers point at the local OpenCart instance, so the storefront
+// registration must target the same local instance for the record to be visible there.
+const STOREFRONT_URL = process.env.STOREFRONT_URL || 'http://localhost/opencart/upload/';
+
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin';
 
 test(
     'OpenCart Customer Registration - UI + Admin + MySQL validation @master @sanity @regression @end-to-end @db',
-    async ({ page, homePage, registerPage, accountSuccessPage, adminLoginPage, adminCustomersPage }) => {
+    async ({ browser, page, homePage, registerPage, accountSuccessPage }) => {
         // Dynamically generated unique customer data
         const customer = {
             firstname: RandomDataUtil.getFirstName(),
@@ -47,7 +53,7 @@ test(
         };
 
         await test.step('1) Open the application', async () => {
-            await homePage.goTo();
+            await homePage.goTo(STOREFRONT_URL);
             expect(homePage).toBeDefined();
         });
 
@@ -73,27 +79,35 @@ test(
             expect(isAccountCreated, 'Account created confirmation should be displayed').toBeTruthy();
         });
 
-        await test.step('5) Open the OpenCart Admin Portal and log in', async () => {
-            await page.goto(ADMIN_PORTAL_URL);
-            const isAdminLoginDisplayed = await adminLoginPage.isAdminLoginPageExists();
+        await test.step('5) Open the OpenCart Admin Portal in an isolated context and log in', async () => {
+            // Use a separate browser context so the storefront session cannot interfere with the admin session
+            const adminContext = await browser.newContext();
+            const adminPage = await adminContext.newPage();
+            const adminLogin = new AdminLoginPage(adminPage);
+            const adminCustomers = new AdminCustomersPage(adminPage);
+
+            await adminPage.goto(ADMIN_PORTAL_URL);
+            const isAdminLoginDisplayed = await adminLogin.isAdminLoginPageExists();
             expect(isAdminLoginDisplayed).toBeTruthy();
-            await adminLoginPage.login(ADMIN_USERNAME, ADMIN_PASSWORD);
-        });
+            await adminLogin.login(ADMIN_USERNAME, ADMIN_PASSWORD);
 
-        await test.step('6) Navigate to Customers and search for the customer by the unique email', async () => {
-            await adminCustomersPage.openCustomersSection();
-            const isCustomersPageDisplayed = await adminCustomersPage.isCustomersPageExists();
-            expect(isCustomersPageDisplayed).toBeTruthy();
-            await adminCustomersPage.filterByEmail(customer.email);
-        });
+            await test.step('6) Navigate to Customers and search for the customer by the unique email', async () => {
+                await adminCustomers.openCustomersSection();
+                const isCustomersPageDisplayed = await adminCustomers.isCustomersPageExists();
+                expect(isCustomersPageDisplayed).toBeTruthy();
+                await adminCustomers.filterByEmail(customer.email);
+            });
 
-        await test.step('7) Verify the customer exists in the Admin Portal with matching details', async () => {
-            const customerDetails = await adminCustomersPage.getCustomerDetails(customer.email);
-            expect(customerDetails, `Admin customer record for ${customer.email} should exist`).not.toBeNull();
-            expect(customerDetails!.name).toContain(customer.firstname);
-            expect(customerDetails!.name).toContain(customer.lastname);
-            expect(customerDetails!.email).toBe(customer.email);
-            expect(customerDetails!.status).toBe('Enabled');
+            await test.step('7) Verify the customer exists in the Admin Portal with matching details', async () => {
+                const customerDetails = await adminCustomers.getCustomerDetails(customer.email);
+                expect(customerDetails, `Admin customer record for ${customer.email} should exist`).not.toBeNull();
+                expect(customerDetails!.name).toContain(customer.firstname);
+                expect(customerDetails!.name).toContain(customer.lastname);
+                expect(customerDetails!.email).toBe(customer.email);
+                expect(customerDetails!.status).toBe('Enabled');
+            });
+
+            await adminContext.close();
         });
 
         await test.step('8) Query oc_customer in MySQL and validate the registered customer', async () => {

@@ -5,11 +5,14 @@ export default defineConfig({
 
   testDir: "./tests",
 
-  fullyParallel: true,
+  // The shared local OpenCart/XAMPP storefront cannot reliably persist two
+  // concurrent customer registrations, so the whole suite runs on one worker
+  // to keep registration-based tests deterministic.
+  fullyParallel: false,
 
   retries: process.env.CI ? 2 : 0,
 
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
 
   reporter: [
     ["list"], // Detailed console output

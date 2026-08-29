@@ -74,6 +74,8 @@ export class AdminCustomersPage {
   async filterByEmail(email: string): Promise<void> {
     await this.txtFilterEmail.fill(email);
     await this.btnFilter.click();
+    // Wait for the filtered results to load before reading the table
+    await this.page.waitForLoadState('networkidle');
   }
 
   /**
@@ -100,23 +102,31 @@ export class AdminCustomersPage {
   }
 
   /**
-   * Returns the details of the customer row matching the given email
+   * Returns the details of the customer row matching the given email, retrying the
+   * filter a bounded number of times to allow the customer record to propagate.
    * @param email - Customer email to look for
    * @returns Promise<{ name: string; email: string; status: string } | null> - the
    * displayed name, email and status of the matching customer row, or null when not found
    */
   async getCustomerDetails(email: string): Promise<{ name: string; email: string; status: string } | null> {
-    const rows = this.customerTable.locator('tbody tr');
-    const rowCount = await rows.count();
-    for (let i = 0; i < rowCount; i++) {
-      const row = rows.nth(i);
-      const rowEmail = (await row.locator('td').nth(2).textContent())?.trim() ?? '';
-      if (rowEmail.toLowerCase() === email.toLowerCase()) {
-        return {
-          name: (await row.locator('td').nth(1).textContent())?.trim() ?? '',
-          email: rowEmail,
-          status: (await row.locator('td').nth(4).textContent())?.trim() ?? '',
-        };
+    const maxAttempts = 5;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const rows = this.customerTable.locator('tbody tr');
+      const rowCount = await rows.count();
+      for (let i = 0; i < rowCount; i++) {
+        const row = rows.nth(i);
+        const rowEmail = (await row.locator('td').nth(2).textContent({ timeout: 3000 }))?.trim() ?? '';
+        if (rowEmail.toLowerCase() === email.toLowerCase()) {
+          return {
+            name: (await row.locator('td').nth(1).textContent({ timeout: 3000 }))?.trim() ?? '',
+            email: rowEmail,
+            status: (await row.locator('td').nth(4).textContent({ timeout: 3000 }))?.trim() ?? '',
+          };
+        }
+      }
+      if (attempt < maxAttempts) {
+        console.log(`Customer ${email} not found in admin list (attempt ${attempt}), re-applying filter...`);
+        await this.filterByEmail(email);
       }
     }
     return null;

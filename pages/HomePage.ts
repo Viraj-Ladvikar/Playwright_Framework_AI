@@ -24,9 +24,10 @@ export class HomePage {
 
   /**
    * Navigates to the application URL
+   * @param url - Optional URL override; defaults to WEB_APP_URL from the environment
    */
-  async goTo(): Promise<void> {
-    await this.page.goto(process.env.WEB_APP_URL || 'http://localhost/opencart/upload/');
+  async goTo(url?: string): Promise<void> {
+    await this.page.goto(url || process.env.WEB_APP_URL || 'http://localhost/opencart/upload/');
   }
 
   /**
